@@ -3,204 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <title>Jogo da Memória - Matrizes</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      margin: 0;
-      padding: 20px;
-      text-align: center;
-    }
-
-    #placar {
-      font-size: 20px;
-      margin-bottom: 15px;
-    }
-
-    #jogador-vez {
-      margin-top: 5px;
-      font-weight: bold;
-    }
-
-    #game {
-      display: grid;
-      grid-template-columns: repeat(5, 140px);
-      gap: 15px;
-      justify-content: center;
-      margin-top: 20px;
-    }
-
-    .card {
-      width: 140px;
-      height: 140px;
-      background-color: #2c3e50;
-      border-radius: 10px;
-      cursor: pointer;
-      position: relative;
-      perspective: 800px;
-    }
-
-    .card-inner {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      transform-style: preserve-3d;
-      transition: transform 0.4s;
-    }
-
-    .flipped .card-inner {
-      transform: rotateY(180deg);
-    }
-
-    .card-front, .card-back {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      backface-visibility: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 10px;
-      box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
-      padding: 10px;
-      box-sizing: border-box;
-      text-align: center;
-    }
-
-    .card-front {
-      background-color: #ecf0f1;
-      color: #000;
-      font-size: 15px;
-      transform: rotateY(180deg);
-    }
-
-    .card-back {
-      background-color: #2980b9;
-      color: white;
-      font-size: 22px;
-    }
-
-    img {
-      max-width: 100%;
-      max-height: 100%;
-      border-radius: 6px;
-    }
-
-    .invisivel {
-      visibility: hidden;
-    }
-  </style>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-  <h1>🧠 Jogo da Memória - Matrizes</h1>
+  <h1>Jogo da Memória - Matrizes</h1>
 
   <div id="placar">
-    👤 Player 1: <span id="score1">0</span> |
-    👤 Player 2: <span id="score2">0</span>
+    Player 1: <span id="score1">0</span> |
+    Player 2: <span id="score2">0</span>
     <div id="jogador-vez">Vez de: Player 1</div>
   </div>
 
   <div id="game"></div>
 
-  <script>
-    const cartas = [
-      { nome: "Matriz Antissimétrica", img: "Matriz Antissimétrica.png", desc: "Espelhada com sinais opostos." },
-      { nome: "Matriz Coluna", img: "Matriz Coluna.png", desc: "Possui apenas uma coluna." },
-      { nome: "Matriz Diagonal", img: "Matriz Diagonal.png", desc: "Zeros fora da diagonal principal." },
-      { nome: "Matriz Escalar", img: "Matriz Escalar.png", desc: "Diagonal com valores iguais." },
-      { nome: "Matriz Identidade", img: "Matriz Identidade.png", desc: "Diagonal com 1, zeros fora." },
-      { nome: "Matriz Linha", img: "Matriz Linha.png", desc: "Possui apenas uma linha." },
-      { nome: "Matriz Normal", img: "Matriz Normal.png", desc: "Multiplicada pela transposta mantém estrutura." },
-      { nome: "Matriz Nula ou Zero", img: "Matriz Nula ou Zero.png", desc: "Todos os elementos são zero." },
-      { nome: "Matriz Quadrada", img: "Matriz Quadrada.png", desc: "Tem o mesmo número de linhas e colunas." },
-      { nome: "Matriz Retangular", img: "Matriz Retangular.png", desc: "Linhas e colunas diferentes." },
-      { nome: "Matriz Simétrica", img: "Matriz Simétrica.png", desc: "Igual à transposta." },
-      { nome: "Matriz Transposta", img: "Matriz Transposta.png", desc: "Troca linhas por colunas." },
-      { nome: "Matriz Triângulo Inferior", img: "Matriz Triângulo Inferior.png", desc: "Zeros acima da diagonal." },
-      { nome: "Matriz Triângulo Superior", img: "Matriz Triângulo Superior.png", desc: "Zeros abaixo da diagonal." },
-      { nome: "Matriz Unidade", img: "Matriz Unidade.png", desc: "Outro nome para identidade." }
-    ];
-
-    const pares = [];
-    cartas.forEach((carta, index) => {
-      pares.push({ id: index, tipo: "img", conteudo: `Cartas/${carta.img}` });
-      pares.push({ id: index, tipo: "txt", conteudo: carta.desc });
-    });
-
-    // Embaralha os pares
-    pares.sort(() => Math.random() - 0.5);
-
-    const game = document.getElementById('game');
-    let flipped = [];
-    let lock = false;
-    let score1 = 0;
-    let score2 = 0;
-    let jogador = 1;
-
-    const updatePlacar = () => {
-      document.getElementById('score1').textContent = score1;
-      document.getElementById('score2').textContent = score2;
-      document.getElementById('jogador-vez').textContent = `Vez de: Player ${jogador}`;
-    };
-
-    updatePlacar();
-
-    pares.forEach(carta => {
-      const div = document.createElement('div');
-      div.className = 'card';
-      div.dataset.id = carta.id;
-      div.dataset.tipo = carta.tipo;
-
-      div.innerHTML = `
-        <div class="card-inner">
-          <div class="card-back">?</div>
-          <div class="card-front">
-            ${carta.tipo === 'img'
-              ? `<img src="${carta.conteudo}" alt="Imagem">`
-              : `<span>${carta.conteudo}</span>`}
-          </div>
-        </div>
-      `;
-
-      div.addEventListener('click', () => {
-        if (lock || div.classList.contains('matched') || div.classList.contains('flipped')) return;
-
-        div.classList.add('flipped');
-        flipped.push(div);
-
-        if (flipped.length === 2) {
-          lock = true;
-          const [a, b] = flipped;
-
-          if (a.dataset.id === b.dataset.id && a.dataset.tipo !== b.dataset.tipo) {
-            a.classList.add('matched');
-            b.classList.add('matched');
-
-            setTimeout(() => {
-              a.classList.add('invisivel');
-              b.classList.add('invisivel');
-              if (jogador === 1) score1++; else score2++;
-              updatePlacar();
-              flipped = [];
-              lock = false;
-            }, 600);
-          } else {
-            setTimeout(() => {
-              a.classList.remove('flipped');
-              b.classList.remove('flipped');
-              jogador = jogador === 1 ? 2 : 1;
-              updatePlacar();
-              flipped = [];
-              lock = false;
-            }, 1000);
-          }
-        }
-      });
-
-      game.appendChild(div);
-    });
-  </script>
-
+  <script src="js/script.js"></script>
 </body>
 </html>
